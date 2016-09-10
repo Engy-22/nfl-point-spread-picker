@@ -67,8 +67,9 @@ os_games <- os_teams %>%
 
 # Joining the two
 games <- inner_join(os_games, olg_games, c('away', 'home')) %>%
-    mutate(date = Sys.Date()) %>%
-    select(date, home, away, olg_home_spread, os_home_spread)
+    mutate(date = Sys.Date(),
+           olg_os_gap = abs(olg_home_spread - os_home_spread)) %>%
+    select(date, home, away, olg_home_spread, os_home_spread, olg_os_gap)
 
 # Outputting
 google_sheets <- gs_key('1w-j9itmaUZQacCUmdirAFWZ2DpftqD40e0ECiGmxogY',
