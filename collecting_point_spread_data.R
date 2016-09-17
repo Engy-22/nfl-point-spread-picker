@@ -59,7 +59,7 @@ clean_olg_data <- function (file_type, file_date = Sys.Date()) {
     games
 }
 
-olg_games <- clean_olg_data(file_type = 'results', file_date = '2016-09-17')
+olg_games <- clean_olg_data(file_type = 'odds', file_date = '2016-09-17')
 
 #### Data Munging ####
 # OddsShark point spread data
@@ -86,10 +86,15 @@ games <- inner_join(os_games,
                     olg_games %>% rename(olg_home_spread = home_spread),
                     c('away', 'home')) %>%
     mutate(date = Sys.Date(),
-           olg_os_gap = abs(olg_home_spread - os_home_spread)) %>%
-    select(date, home, away, olg_home_spread, os_home_spread, olg_os_gap)
+           olg_os_gap = abs(olg_home_spread - os_home_spread),
+           should_pick = ifelse(olg_home_spread < os_home_spread,
+                                away, home)) %>%
+    select(date, home, away, olg_home_spread, os_home_spread, olg_os_gap,
+           should_pick)
 
 # Outputting
+print(games %>% arrange(desc(olg_os_gap)) %>% select(should_pick, olg_os_gap))
+
 google_sheets <- gs_key('1w-j9itmaUZQacCUmdirAFWZ2DpftqD40e0ECiGmxogY',
                         visibility = 'private')
 gs_add_row(google_sheets, ws = 'spreads', input = games)
