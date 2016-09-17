@@ -4,18 +4,16 @@
 # save them in your working directory
 
 #### Setting Working Directory ####
-setwd('/Users/david.rubinger/Documents/point_spread_analysis')
+setwd('/Users/david.rubinger/Documents/point-spread-analysis')
 
 #### Loading Packages ####
 library(rvest)
-library(dplyr)
-library(tidyr)
-library(stringr)
 library(googlesheets)
+library(dplyr)
 
 #### Defining Functions ####
 # Make team names consistent between OLG and OddsShark
-ReformatNames <- function (x) {
+format_team_names <- function (x) {
     x <- gsub('new york-g', 'ny giants', x)
     x <- gsub('new york-j', 'ny jets', x)
     x
@@ -27,25 +25,43 @@ Mode <- function (x) {
     uniq[which.max(tabulate(match(x, uniq)))]
 }
 
-#### Data Munging ####
-# OLG point spread data
-filename <- paste0('olg_point_spreads_', Sys.Date(), '.txt')
-olg_page <- readLines(filename)
-olg_games <- olg_page %>%
-    data.frame() %>%
-    setNames('game') %>%
-    filter(grepl('[[:alpha:]]@', olg_page)) %>%
-    separate(game, c('away', 'home'), sep = '@') %>%
-    mutate(fav_away_spread = str_extract(away, '\\(.*\\)'),
-           fav_home_spread = str_extract(home, '\\(.*\\)')) %>%
-    mutate_each(funs(as.numeric(gsub('\\(|\\)| ', '', .))),
-                fav_away_spread, fav_home_spread) %>%
-    mutate_each(funs(tolower(trimws(gsub('\\(.*\\)', '', .)))), away, home) %>%
-    mutate_each(funs(ReformatNames), away, home) %>%
-    mutate(olg_home_spread = ifelse(
-        is.na(fav_home_spread), -fav_away_spread, fav_home_spread)) %>%
-    select(-fav_away_spread, -fav_home_spread)
+# Read OLG point spread data pasted in text file
+clean_olg_data <- function (file_type, file_date = Sys.Date()) {
+    
+    # Loading packages
+    suppressWarnings(library(tidyr))
+    suppressWarnings(library(stringr))
+    
+    # Reading
+    filename <- paste0(
+        'olg-point-spreads/', file_type, '-', file_date, '.txt')
+    olg_text <- suppressWarnings(readLines(filename))
+    
+    # Cleaning
+    games <- olg_text %>%
+        data_frame() %>%
+        filter(grepl('@', `.`)) %>%
+        rename_(line = '.') %>%
+        separate(line, c('away', 'home'), sep = '@') %>%
+        mutate_each(funs(as.numeric(
+            gsub('\\(|\\)', '', str_extract(gsub('\\(P\\)', '(0)', .),
+                                            '\\(.*\\)')))),
+            fav_away_spread = away, fav_home_spread = home) %>%
+        mutate(home_spread = ifelse(is.na(fav_home_spread),
+                                    -fav_away_spread, fav_home_spread)) %>%
+        mutate_each(
+            funs(format_team_names(tolower(trimws(gsub('\\(.*\\)', '', .))))),
+            away, home) %>%
+        distinct(away, home) %>%  # selects first (latest) spread
+        select(away, home, home_spread)
+    
+    # Outputting
+    games
+}
 
+olg_games <- clean_olg_data(file_type = 'results', file_date = '2016-09-17')
+
+#### Data Munging ####
 # OddsShark point spread data
 os_page <- read_html('http://www.oddsshark.com/nfl/odds')
 os_teams <- data.frame(
@@ -66,7 +82,9 @@ os_games <- os_teams %>%
     mutate_each(funs(tolower), home, away)
 
 # Joining the two
-games <- inner_join(os_games, olg_games, c('away', 'home')) %>%
+games <- inner_join(os_games,
+                    olg_games %>% rename(olg_home_spread = home_spread),
+                    c('away', 'home')) %>%
     mutate(date = Sys.Date(),
            olg_os_gap = abs(olg_home_spread - os_home_spread)) %>%
     select(date, home, away, olg_home_spread, os_home_spread, olg_os_gap)
