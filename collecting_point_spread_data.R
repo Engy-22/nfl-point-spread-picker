@@ -53,14 +53,14 @@ clean_olg_data <- function (file_type, file_date = Sys.Date()) {
         mutate_each(
             funs(format_team_names(tolower(trimws(gsub('\\(.*\\)', '', .))))),
             away, home) %>%
-        distinct(away, home) %>%  # selects first (latest) spread
+        distinct(away, home, .keep_all = TRUE) %>%  # selects latest spread
         select(away, home, home_spread)
     
     # Outputting
     games
 }
 
-olg_games <- clean_olg_data(file_type = 'results', file_date = '2016-09-17')
+olg_games <- clean_olg_data(file_type = 'odds', file_date = '2016-09-21')
 
 #### Data Munging ####
 # OddsShark point spread data
