@@ -4,7 +4,7 @@
 # save them in your working directory
 
 #### Setting Working Directory ####
-setwd('/Users/david.rubinger/Documents/point-spread-analysis')
+# setwd('~/projects/point-spread-analysis')
 
 #### Loading Packages ####
 library(rvest)
