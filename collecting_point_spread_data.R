@@ -17,7 +17,7 @@ Mode <- function (x) {
 }
 
 #### Load Data ####
-olg_games <- clean_olg_data(file_type = 'odds', file_date = "2017-09-23")
+olg_games <- clean_olg_data(file_type = 'odds', file_date = "2016-09-17")
 
 #### Data Munging ####
 # OddsShark point spread data
