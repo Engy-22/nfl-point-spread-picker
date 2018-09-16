@@ -29,7 +29,7 @@ os_teams <- data.frame(
 os_spread <- os_page %>%
     html_nodes('.border-bottom') %>%
     html_text() %>%
-    matrix(ncol = 36, byrow = TRUE) %>%
+    matrix(ncol = 34, byrow = TRUE) %>%
     data.frame(stringsAsFactors = FALSE) %>%
     select(seq(3, ncol(.), by = 2)) %>%
     mutate_each(funs(as.numeric(gsub('Ev|\\+', '0', .)))) %>%
