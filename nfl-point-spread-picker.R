@@ -32,12 +32,12 @@ os_spread <- os_page %>%
     matrix(ncol = 34, byrow = TRUE) %>%
     data.frame(stringsAsFactors = FALSE) %>%
     select(seq(3, ncol(.), by = 2)) %>%
-    mutate_each(funs(as.numeric(gsub('Ev|\\+', '0', .)))) %>%
+    mutate_all(funs(as.numeric(gsub('Ev|\\+', '0', .)))) %>%
     transmute(os_home_spread = -apply(., 1, Mode))
 os_games <- os_teams %>%
     bind_cols(os_spread) %>%
     filter(!is.na(os_home_spread)) %>%
-    mutate_each(funs(tolower), home, away)
+    mutate_at(vars(home, away), funs(tolower))
 
 # Joining the two
 games <- inner_join(os_games,

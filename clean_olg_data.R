@@ -23,15 +23,27 @@ clean_olg_data <- function (file_type, file_date = Sys.Date()) {
         filter(grepl('@', `.`)) %>%
         rename_(line = '.') %>%
         separate(line, c('away', 'home'), sep = '@') %>%
-        mutate_each(funs(as.numeric(
-            gsub('\\(|\\)', '', str_extract(gsub('\\(P\\)', '(0)', .),
-                                            '\\(.*\\)')))),
-            fav_away_spread = away, fav_home_spread = home) %>%
+        mutate_at(
+            vars(fav_away_spread = away, fav_home_spread = home),
+            funs(
+                as.numeric(
+                    gsub(
+                        '\\(|\\)',
+                        '',
+                        str_extract(
+                            gsub('\\(P\\)', '(0)', .),
+                            '\\(.*\\)'
+                        )
+                    )
+                )
+            )
+        ) %>% 
         mutate(home_spread = ifelse(is.na(fav_home_spread),
                                     -fav_away_spread, fav_home_spread)) %>%
-        mutate_each(
-            funs(format_team_names(tolower(trimws(gsub('\\(.*\\)', '', .))))),
-            away, home) %>%
+        mutate_at(
+            vars(away, home),
+            funs(format_team_names(tolower(trimws(gsub('\\(.*\\)', '', .)))))
+        ) %>% 
         distinct(away, home, .keep_all = TRUE) %>%  # selects latest spread
         select(away, home, home_spread)
     
