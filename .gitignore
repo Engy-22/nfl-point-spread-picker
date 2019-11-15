@@ -1,6 +1,7 @@
 .httr-oauth
 *.history
 .Rproj.user
+olg-point-spreads/*
 .Rhistory
 .DS_Store
 rough/
