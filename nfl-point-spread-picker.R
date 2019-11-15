@@ -21,6 +21,7 @@ olg_games <- clean_olg_data(file_type = 'odds', file_date = "2016-09-17")
 
 #### Data Munging ####
 # OddsShark point spread data
+n_bookies <- 15  # number of bookies on Oddshark
 os_page <- read_html('http://www.oddsshark.com/nfl/odds')
 os_teams <- data.frame(
     away = os_page %>% html_nodes('.op-team-top') %>% html_text(),
@@ -29,7 +30,7 @@ os_teams <- data.frame(
 os_spread <- os_page %>%
     html_nodes('.border-bottom') %>%
     html_text() %>%
-    matrix(ncol = 34, byrow = TRUE) %>%
+    matrix(ncol = n_bookies * 2, byrow = TRUE) %>%
     data.frame(stringsAsFactors = FALSE) %>%
     select(seq(3, ncol(.), by = 2)) %>%
     mutate_all(funs(as.numeric(gsub('Ev|\\+', '0', .)))) %>%
